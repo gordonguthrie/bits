@@ -12,9 +12,9 @@
 	 bounce_qry/0
 	]).
 
--include("riak_kv_ddl.hrl").
+-include_lib("riak_kv/include/riak_kv_ddl.hrl").
 -include_lib("riak_kv/include/riak_kv_index.hrl").
--include("riak_kv_wm_raw.hrl").
+-include_lib("riak_kv/include/riak_kv_wm_raw.hrl").
 
 -define(BUCKET,   <<"TsBucket3">>).
 -define(INDEX,    <<"Index_bin">>).

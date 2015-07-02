@@ -1,5 +1,7 @@
 -module(ts_runner).
 
+%% a runner for time series dev
+
 -export([
 	 setup/0,
 	 show/0,
@@ -21,6 +23,7 @@
 -define(CLIENTID, <<"li_client">>).
 -define(GEOHASH,  "geohash_val").
 -define(USER,     "user_").
+-define(NOOFRECS, 10).
 
 bounce_qry() ->
     exit(whereis(riak_kv_qry_queue), "adios bandito"),
@@ -124,15 +127,17 @@ get_ddl() ->
 		   local_key     = LK}.
 
 dump() ->
+    io:format("Dumping the contents of the bucket ~p from within leveldb~n", [?BUCKET]),
     Mod = riak_kv_ddl:make_module_name(?BUCKET),
     DDL = get_ddl(),
     {PK, _LK, _Obj} = make_obj(Mod, DDL, 1),
     leveldb_console:dump_bucket(?BUCKET, PK).
 
 load() ->
+    io:format("Loading ~p records into the  bucket ~p~n", [?NOOFRECORDS, ?BUCKET]),
     Mod = riak_kv_ddl:make_module_name(?BUCKET),
     DDL = get_ddl(),
-    load(Mod, DDL, 10).
+    load(Mod, DDL, ?NOOFRECS).
 
 load(_Mod, _DDL, 0) ->
     ok;
@@ -173,5 +178,6 @@ make_(Prefix, N) when is_integer(N) ->
     list_to_binary(Prefix ++ "_" ++ integer_to_list(N)).
 
 show() ->
+    io:format("Getting bucket properties for the bucket ~p~n", [?BUCKET]),
     Client = riak_client:new(node(), ?CLIENTID),
     _Props = riak_client:get_bucket(?BUCKET, Client).

@@ -3,12 +3,26 @@ TS Runner
 
 End to end runner to mucking about with Time Series stuff
 
+Setup
+-----
+
+On the main riak do
+`make stagedevrel`
+
+Edit the files
+`$RIAK/dev/devN/etc/riak.conf`
+
+and set the following:
+`storage_backedn=leveldb`
+
 Writing Data to the backend
 ---------------------------
 
 1 Setup the bucket type and stuff
 
 `ts_runner:setup()`
+
+This needs to be run every session at the mo - as the DDL module don't persist between node restarts (yet)
 
 2 Load up some time series data into eleveldb
 

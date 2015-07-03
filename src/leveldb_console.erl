@@ -15,11 +15,11 @@ run_fold(Bucket, Key, Fun) ->
 
 dump_bucket(Bucket, Key) when is_binary(Bucket) andalso is_binary(Key) ->
     Ref = get_vnode_ref(Bucket, Key),
-    %% ok = dump_stats(Ref),
+    % ok = dump_stats(Ref),
     DumpFun = fun({K, V}, Acc) when is_binary(K) andalso is_binary(V) ->
 		      K2 = sext:decode(K),
 		      {V2, K3} = case K2 of
-			       {o, K4, SubK} -> 
+			       {o, K4, SubK} ->
 				   RO = riak_object:from_binary(Bucket, Key, V),
 					 SubK1 = sext:decode(SubK),
 					 O2 = {o, K4, SubK1},
@@ -46,12 +46,13 @@ get_level_reference(Idx) ->
     {ok, Pid} = riak_core_vnode_manager:get_vnode_pid(Idx, riak_kv_vnode),
     State = get_state_data(Pid),
     ModState = element(4, State),
+    io:format("ModState is ~p~n", [ModState]),
     case element(3,ModState) of
 	riak_kv_eleveldb_backend ->
-	    LvlState = element(4, ModState),
+	    LvlState = element(5, ModState),
 	    element(2, LvlState);
 	_ ->
-	    undefined
+	    exit('no leveldb reference, erk, you got leveldb backend configured in riak.conf, mupppet?')
     end.
 
 %% If a multi-backend, use the second version with a backend name
@@ -152,8 +153,9 @@ dump_stats(Ref) ->
     ok.
 
 get_vnode_ref(Bucket, Key) ->
-        BucketProps = riak_core_bucket:get_bucket(Bucket),
+    BucketProps = riak_core_bucket:get_bucket(Bucket),
     DocIdx = riak_core_util:chash_key({Bucket, Key}, BucketProps),
     UpNodes = riak_core_node_watcher:nodes(riak_kv),
     [{{BFN, _}, _}] = riak_core_apl:get_apl_ann(DocIdx, 1, UpNodes),
+    io:format("BFN is ~p~n", [BFN]),
     _Ref = get_level_reference(BFN).

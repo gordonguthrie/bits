@@ -28,8 +28,9 @@ dump_bucket(Bucket, Key) when is_binary(Bucket) andalso is_binary(Key) ->
 				     Other  ->
 					 {V, Other}
 				 end,
-		      io:format("Key: ~p - Val: ~p~n", [K3, V2]),
+		      io:format("Key: ~p~n-Val: ~p~n", [K3, V2]),
 		      Acc
+
 	      end,
     eleveldb:fold(Ref, DumpFun, [], []),
     ok.
@@ -46,7 +47,6 @@ get_level_reference(Idx) ->
     {ok, Pid} = riak_core_vnode_manager:get_vnode_pid(Idx, riak_kv_vnode),
     State = get_state_data(Pid),
     ModState = element(4, State),
-    io:format("ModState is ~p~n", [ModState]),
     case element(3,ModState) of
 	riak_kv_eleveldb_backend ->
 	    LvlState = element(5, ModState),
@@ -157,5 +157,4 @@ get_vnode_ref(Bucket, Key) ->
     DocIdx = riak_core_util:chash_key({Bucket, Key}, BucketProps),
     UpNodes = riak_core_node_watcher:nodes(riak_kv),
     [{{BFN, _}, _}] = riak_core_apl:get_apl_ann(DocIdx, 1, UpNodes),
-    io:format("BFN is ~p~n", [BFN]),
     _Ref = get_level_reference(BFN).

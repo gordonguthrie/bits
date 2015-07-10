@@ -54,9 +54,9 @@ setup_tmux_fn() {
     tmux split-window -v -t riak
     tmux select-layout -t riak main-vertical
 
-    tmux send-keys -t riak:0.0 'cd /home/vagrant/riak_kv && clear' C-m
-    tmux send-keys -t riak:0.1 '/home/vagrant/riak/dev/dev1/bin/riak attach-direct' C-m
-    tmux send-keys -t riak:0.2 'cd /home/vagrant/vagrant_data/riak && clear' C-m
+    tmux send-keys -t riak:1.1 'cd /home/vagrant/riak_kv && clear' C-m
+    tmux send-keys -t riak:1.2 '/home/vagrant/riak/dev/dev1/bin/riak attach-direct' C-m
+    tmux send-keys -t riak:1.3 'cd /home/vagrant/vagrant_data/riak && clear' C-m
 
     tmux attach
 }

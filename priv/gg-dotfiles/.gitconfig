@@ -1,0 +1,7 @@
+[push]
+	default = current
+[user]
+	name = Gordon Guthrie
+	email = gguthrie@basho.com
+[core]
+	editor = emacs -nw

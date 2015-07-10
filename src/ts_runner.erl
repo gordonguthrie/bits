@@ -10,8 +10,8 @@
 	 prep_q/0,
 	 qry/0,
 	 qry/1,
-	 get_ddl/0,
-	 bounce_qry/0
+	 get_ddl/0
+	 % bounce_qry/0
 	]).
 
 -include("riak_kv_ddl.hrl").
@@ -25,9 +25,9 @@
 -define(USER,     "user_").
 -define(NOOFRECS, 10).
 
-bounce_qry() ->
-    exit(whereis(riak_kv_qry_queue), "adios bandito"),
-    ok.
+%% bounce_qry() ->
+%%     exit(whereis(riak_kv_qry_queue), "adios bandito"),
+%%     ok.
 
 qry() ->
     Qry = prep_q(),
@@ -35,14 +35,14 @@ qry() ->
 
 qry(#riak_kv_li_index_v1{} = Qry) ->
     DDL = get_ddl(),
-    io:format("in qry/1~n"),
+    io:format("in qry/1~n- DDL is ~p~n- Qry is ~p~n", [DDL, Qry]),
     case riak_kv_ddl:is_query_valid(DDL, Qry) of
 	{false, Err} -> exit({invalid_query, Err});
-	true         -> qry2(Qry)
+	true         -> qry2(DDL, Qry)
     end.
 
-qry2(Qry) ->
-    Ret = riak_kv_qry_queue:put_on_queue(Qry),
+qry2(DDL, Qry) ->
+    Ret = execute_qry(DDL, Qry),
     io:format("Ret is ~p~n", [Ret]),
     ok.
 
@@ -143,15 +143,17 @@ load(_Mod, _DDL, 0) ->
     ok;
 load(Mod, DDL, N) ->
     {PK, LK, Obj} = make_obj(Mod, DDL, N),
+    io:format("making object ~p~n-PK is ~p~n-LK is ~p~n",[N, sext:decode(PK),
+							  sext:decode(LK)]),
     RObj = riak_object:new(?BUCKET, PK, term_to_binary(Obj)),
     MD1 = riak_object:get_update_metadata(RObj),
-    MD2 = dict:store(?MD_INDEX,
-		     [{?INDEX, make_index(N)}],
-		     MD1
-		    ),
+    %% MD2 = dict:store(?MD_INDEX,
+    %% 		     [{?INDEX, make_index(N)}],
+    %% 		     MD1
+    %% 		    ),
     MD3 = dict:store(?MD_LI_IDX,
 		     LK,
-		     MD2
+		     MD1
 		    ),
     RObj2 = riak_object:update_metadata(RObj, MD3),
     riak_client:put(RObj2, {riak_client, [node(), undefined]}),
@@ -172,12 +174,25 @@ make_obj(Mod, DDL, N) ->
 	false -> exit("borked object")
     end.
 
-make_index(N) -> make_("index", N).
+% make_index(N) -> make_("index", N).
 
-make_(Prefix, N) when is_integer(N) ->
-    list_to_binary(Prefix ++ "_" ++ integer_to_list(N)).
+% make_(Prefix, N) when is_integer(N) ->
+%    list_to_binary(Prefix ++ "_" ++ integer_to_list(N)).
 
 show() ->
     io:format("Getting bucket properties for the bucket ~p~n", [?BUCKET]),
     Client = riak_client:new(node(), ?CLIENTID),
     _Props = riak_client:get_bucket(?BUCKET, Client).
+
+execute_qry(DDL, Q) ->
+    SubQueries = riak_kv_qry_compiler:compile(DDL, Q),
+    io:format("in ts_runner:execute_qry SubQueries is ~p~n", [SubQueries]),
+    bombaste.
+    %% Bucket = Q#riak_kv_li_index_v1.bucket,
+    %% %% fix these up too
+    %% Timeout = {timeout, 10000},
+    %% QId = 1,
+    %% Me = self(),
+    %% CoverageFn = {colocated, riak_kv_qry_coverage_plan},
+    %% {ok, _PID} = riak_kv_index_fsm_sup:start_index_fsm(node(), [{raw, QId, Me}, [Bucket, none, Q, Timeout, CoverageFn]]),
+    %% rangola.

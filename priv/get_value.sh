@@ -12,7 +12,7 @@ set -o pipefail
 # set -x
 
 # PORT=10018
-PORT=8098
+PORT=10018
 
 BUCKET=$1
 KEY=$2

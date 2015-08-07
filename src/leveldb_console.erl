@@ -17,18 +17,18 @@ dump_bucket(Bucket, Key) when is_binary(Bucket) andalso is_binary(Key) ->
     Ref = get_vnode_ref(Bucket, Key),
     % ok = dump_stats(Ref),
     DumpFun = fun({K, V}, Acc) when is_binary(K) andalso is_binary(V) ->
-		      K2 = sext:decode(K),
-		      {V2, K3} = case K2 of
-			       {o, K4, SubK} ->
-				   RO = riak_object:from_binary(Bucket, Key, V),
-					 SubK1 = sext:decode(SubK),
-					 O2 = {o, K4, SubK1},
-					 RO2 = riak_object:get_value(RO),
-					 {binary_to_term(RO2), O2};
-				     Other  ->
-					 {V, Other}
-				 end,
-		      io:format("Key: ~p~n-Val: ~p~n", [K3, V2]),
+		      %% K2 = sext:decode(K),
+		      %% {V2, K3} = case K2 of
+		      %% 	       {o, K4, SubK} ->
+		      %% 		   RO = riak_object:from_binary(Bucket, Key, V),
+		      %% 			 SubK1 = sext:decode(SubK),
+		      %% 			 O2 = {o, K4, SubK1},
+		      %% 			 RO2 = riak_object:get_value(RO),
+		      %% 			 {binary_to_term(RO2), O2};
+		      %% 		     Other  ->
+		      %% 			 {V, Other}
+		      %% 		 end,
+		      io:format("Key: ~p~n-Val: ~p~n", [K, V]),
 		      Acc
 
 	      end,

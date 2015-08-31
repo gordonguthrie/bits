@@ -22,8 +22,8 @@ log(Str) ->
     [{registered_name, RN}] = erlang:process_info(self(), [registered_name]),
     case file:open(?FILENAME, [append]) of
 	{ok, Id} ->
-	    io:fwrite(Id, "On ~p as {~p, ~p}~n- ~s~n",
-		      [node(), self(), RN, Str]),
+	    io:fwrite(Id, "On ~p as {~p, ~p} at ~p~n- ~s~n",
+		      [node(), self(), RN, calendar:now_to_universal_time(now()), Str]),
 	    file:close(Id);
 	Err  ->
 	    {error, Err}

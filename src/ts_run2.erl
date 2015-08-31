@@ -24,6 +24,7 @@ dump() ->
     io:format("Dumping the contents of the bucket ~p from within leveldb~n", [?BUCKET]),
     {Mod, DDL} = create_bucket(),
     {PK, _LK, _Obj} = make_obj(Mod, DDL, 1),
+    gg:format("in dump BUCKET is ~p PK is ~p~n", [?BUCKET, PK]),
     leveldb_console:dump_bucket(?BUCKET, PK).
 
 create_bucket() ->
@@ -48,7 +49,6 @@ put2(0, _Mod, _DDL) ->
     ok;
 put2(N, Mod, DDL) when is_integer(N) andalso N > 0 -> 
     {PK, LK, Obj} = make_obj(Mod, DDL, N),
-    gg:format("in put2 PK is ~p LK is ~p~n", [PK, LK]),
     RObj = riak_object:new(?BUCKET, PK, term_to_binary(Obj)),
     MD1 = riak_object:get_update_metadata(RObj),
     MD2 = dict:store(?MD_LI_IDX,
@@ -66,16 +66,27 @@ make_obj(Mod, DDL, N) ->
     Time    = 10000000 + N,
     Weather = term_to_binary([{some, "random", <<"WeaTH3r">>, N}]),
     Temp    = list_to_binary(N2),
-    Obj     = {Geohash, User, Time, Weather, Temp},
-    case Mod:validate_obj(Obj) of
-	true  -> PK = riak_ql_ddl:get_partition_key(DDL, Obj),
-		 LK = riak_ql_ddl:get_local_key(DDL, Obj),
-		 {PK, LK, Obj};
+    Obj     = [
+	       {"geohash", Geohash}, 
+	       {"user", User}, 
+	       {"time", Time}, 
+	       {"weather", Weather}, 
+	       {"temperature", Temp}
+	      ],
+    Obj2 = eleveldb_ts:encode_record(Obj),
+    StrippedObj = list_to_tuple([X || {_, X} <- Obj]),
+    case Mod:validate_obj(StrippedObj) of
+	true  -> PK = riak_ql_ddl:get_partition_key(DDL, StrippedObj),
+		 LK = riak_ql_ddl:get_local_key(DDL, StrippedObj),
+		 PK2 = eleveldb_ts:encode_key(PK),
+		 LK2 = eleveldb_ts:encode_key(LK),
+		 gg:format("Writing with PK of ~p (~p)~n", [PK, PK2]),
+		 {PK2, LK2, Obj2};
 	false -> exit("borked object")
     end.
 
 query_data() ->
-    Query = "select weather from GeoCheckin where time > 3000 and time < 5000 and user = \"user_1\"",
+    Query = "select weather from GeoCheckin where time > 9990000 and time < 11000000 and user = \"user_1\"",
     Lexed = riak_ql_lexer:get_tokens(Query),
     {ok, SQL} = riak_ql_parser:parse(Lexed),
     {_Mod, DDL} = create_bucket(),

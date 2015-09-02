@@ -80,21 +80,39 @@ make_obj(Mod, DDL, N) ->
 		 LK = riak_ql_ddl:get_local_key(DDL, StrippedObj),
 		 PK2 = eleveldb_ts:encode_key(PK),
 		 LK2 = eleveldb_ts:encode_key(LK),
-		 gg:format("Writing with PK of ~p (~p)~n", [PK, PK2]),
+		 io:format("Writing with PK of ~p (~p)~n", [PK, PK2]),
 		 {PK2, LK2, Obj2};
 	false -> exit("borked object")
     end.
 
 query_data() ->
-    Query = "select weather from GeoCheckin where time > 9990000 and time < 11000000 and user = \"user_1\"",
+%%    Query = "select weather from GeoCheckin where time > 9990000 and time < 11000000 and user = \"user_1\"",
+    Query = "select weather from GeoCheckin",
     Lexed = riak_ql_lexer:get_tokens(Query),
     {ok, SQL} = riak_ql_parser:parse(Lexed),
     {_Mod, DDL} = create_bucket(),
     case riak_ql_ddl:is_query_valid(DDL, SQL) of
 	true ->
 	    io:format("Executing Query ~p~n", [Query]),
-	    {qid, _QID} = riak_kv_qry_queue:put_on_queue(SQL);
+	    {qid, QId} = riak_kv_qry_queue:put_on_queue(SQL),
+            io:format("Fetching on qid ~p~n", [QId]),
+	    fetch_with_patience(QId);
 	false ->
 	    exit('borked query')
     end.
 
+-define(FETCH_RETRIES, 5).
+fetch_with_patience(QId) ->
+    fetch_with_patience(QId, ?FETCH_RETRIES).
+fetch_with_patience(QId, 0) ->
+    io:format("Query results on qid ~p Not available after ~b retries\n", [QId, ?FETCH_RETRIES]),
+    [];
+fetch_with_patience(QId, N) ->
+    case riak_kv_qry_queue:fetch(QId) of
+        {error, Why} ->
+            io:format("qry status: ~p\n", [Why]),
+            timer:sleep(1000),
+            fetch_with_patience(QId, N-1);
+        Result ->
+            Result
+    end.

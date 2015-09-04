@@ -6,8 +6,9 @@
          create_bucket/0,
          p/0,
          dump/0,
-         q/0,
-         bounce_qry/0	]).
+         q/0, q/1,
+         bounce_qry/0
+	]).
 
 -include_lib("riak_kv/src/riak_kv_wm_raw.hrl").
 
@@ -85,19 +86,14 @@ make_obj(Mod, DDL, N) ->
     end.
 
 q() ->
-    Query = "select weather from GeoCheckin where time > 9990000 and time < 11000000 and user = \"user_1\"",
-    Lexed = riak_ql_lexer:get_tokens(Query),
-    {ok, SQL} = riak_ql_parser:parse(Lexed),
+    q("select weather from GeoCheckin where time > 9990000 and time < 11000000 and user = \"user_1\"").
+
+q(Query) ->
     {_Mod, DDL} = create_bucket(),
-    case riak_ql_ddl:is_query_valid(DDL, SQL) of
-        true ->
-            io:format("Executing Query ~p~n", [Query]),
-            {qid, QId} = riak_kv_qry_queue:put_on_queue(SQL, DDL),
-            io:format("Fetching on qid ~p~n", [QId]),
-            fetch_with_patience(QId);
-        false ->
-            exit('borked query')
-    end.
+    io:format("Executing Query ~p~n", [Query]),
+    {qid, QId} = riak_kv_qry:submit(Query, DDL),
+    io:format("Fetching on qid ~p~n", [QId]),
+    fetch_with_patience(QId).
 
 -define(FETCH_RETRIES, 5).
 fetch_with_patience(QId) ->

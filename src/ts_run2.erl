@@ -91,7 +91,7 @@ q() ->
 q(Query) ->
     {_Mod, DDL} = create_bucket(),
     io:format("Executing Query ~p~n", [Query]),
-    {qid, QId} = riak_kv_qry:submit(Query, DDL),
+    {ok, QId} = riak_kv_qry:submit(Query, DDL),
     io:format("Fetching on qid ~p~n", [QId]),
     fetch_with_patience(QId).
 

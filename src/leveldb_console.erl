@@ -52,7 +52,7 @@ get_level_reference(Idx) ->
 	    LvlState = element(5, ModState),
 	    element(2, LvlState);
 	_ ->
-	    exit('no leveldb reference, erk, you got leveldb backend configured in riak.conf, mupppet?')
+	    exit('no leveldb reference, erk, you got leveldb backend configured in riak.conf, muppet?')
     end.
 
 %% If a multi-backend, use the second version with a backend name

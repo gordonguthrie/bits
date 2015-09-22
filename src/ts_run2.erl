@@ -1,5 +1,5 @@
 -module(ts_run2).
-
+% hi
 %% a new runner for time series dev
 
 -export([
@@ -12,10 +12,10 @@
 
 -include_lib("riak_kv/src/riak_kv_wm_raw.hrl").
 
--define(BUCKET,   <<"GeoCheckin">>).
+-define(BUCKET,   {<<"GeoCheckin">>, <<"GeoCheckin">>}).
 -define(GEOHASH,  "geohash_val").
 -define(USER,     "user_").
--define(NOOFRECS, 10).
+-define(NOOFRECS, 1).
 
 bounce_qry() ->
     exit(whereis(riak_kv_qry_queue), "adios bandito"),
@@ -86,7 +86,9 @@ make_obj(Mod, DDL, N) ->
     end.
 
 q() ->
-    q("select weather from GeoCheckin where time > 9990000 and time < 11000000 and user = \"user_1\"").
+    q("select weather from GeoCheckin "
+      "where time > 9990000 "
+      "and time < 11000000 and user = \"user_1\"").
 
 q(Query) ->
     {_Mod, DDL} = create_bucket(),

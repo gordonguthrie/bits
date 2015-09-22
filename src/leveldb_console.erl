@@ -13,7 +13,7 @@ run_fold(Bucket, Key, Fun) ->
     Ref = get_vnode_ref(Bucket, Key),
     eleveldb:fold(Ref, Fun, [], []).
 
-dump_bucket(Bucket, Key) when is_binary(Bucket) andalso is_binary(Key) ->
+dump_bucket(Bucket, Key) when is_binary(Key) ->
     Ref = get_vnode_ref(Bucket, Key),
     % ok = dump_stats(Ref),
     DumpFun = fun({K, V}, Acc) when is_binary(K) andalso is_binary(V) ->
